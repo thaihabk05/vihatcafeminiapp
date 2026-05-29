@@ -11,22 +11,22 @@
     "backgroundColor": "#f4f5f6",
     "currencySymbol": "đ",
     "prefixCurrencySymbol": false,
-    "headerLogo": "http://127.0.0.1:4000/assets/logo.svg"
+    "headerLogo": "https://vihatcafeminiapp-production.up.railway.app/assets/logo.svg"
   },
   "banners": [
     {
       "id": "b1",
-      "image": "http://127.0.0.1:4000/assets/banner-1.svg",
+      "image": "https://vihatcafeminiapp-production.up.railway.app/assets/banner-1.svg",
       "title": "Khai trương ViHAT Cafe · Giảm 50% ly đầu tiên"
     },
     {
       "id": "b2",
-      "image": "http://127.0.0.1:4000/assets/banner-2.svg",
+      "image": "https://vihatcafeminiapp-production.up.railway.app/assets/banner-2.svg",
       "title": "Combo trà chiều cho 2 người · 99K"
     },
     {
       "id": "b3",
-      "image": "http://127.0.0.1:4000/assets/banner-3.svg",
+      "image": "https://vihatcafeminiapp-production.up.railway.app/assets/banner-3.svg",
       "title": "Thành viên ViHAT · Tích điểm đổi voucher"
     }
   ],
