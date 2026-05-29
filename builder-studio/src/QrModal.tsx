@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "./api";
 
+type Mode = "dev" | "prod";
+
 /**
- * Modal showing the Zalo Mini App QR code for the current tenant.
+ * Modal showing the Zalo Mini App QR for the current tenant.
  *
- * Reads `zaloAppId` from the full tenant config (the public read endpoint,
- * no auth needed) and renders a QR pointing at `zalo.me/s/<zaloAppId>` —
- * Zalo's universal Mini App deep link. Scanning from the Zalo app opens
- * the Mini App directly, just like users will hit it in production.
+ * Two modes:
+ *   - "Prod" — `https://zalo.me/s/<zaloAppId>`. Only works after the app
+ *     is approved + released, but is the canonical share link.
+ *   - "Dev"  — arbitrary URL the developer pastes (e.g. the one Zalo's
+ *     `zmp deploy` CLI prints after pushing a Development version). The
+ *     URL is persisted per-tenant in localStorage so the next open
+ *     remembers it. Useful for sharing test builds with internal
+ *     testers before submitting for review.
  */
 export function QrModal({
   appId,
@@ -18,39 +24,49 @@ export function QrModal({
 }) {
   const [zaloAppId, setZaloAppId] = useState<string | null>(null);
   const [name, setName] = useState<string>("");
+  const [mode, setMode] = useState<Mode>("dev");
+  const devUrlKey = `qr-dev-url-${appId}`;
+  const [devUrl, setDevUrl] = useState<string>(
+    () => localStorage.getItem(devUrlKey) || ""
+  );
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
+    setErr(null);
     fetch(`${API_BASE}/api/apps/${appId}/config`)
       .then((r) => r.json())
       .then((cfg) => {
         setZaloAppId(cfg.zaloAppId || null);
         setName(cfg.app?.title || appId);
-        if (!cfg.zaloAppId) {
-          setErr(
-            "Tenant chưa có `zaloAppId`. Thêm vào tenant JSON trên Builder API để hiện QR thật."
-          );
-        }
       })
       .catch((e) => setErr(`Không tải được config: ${e.message}`));
-  }, [appId]);
+    setDevUrl(localStorage.getItem(devUrlKey) || "");
+  }, [appId, devUrlKey]);
 
-  const deepLink = zaloAppId ? `https://zalo.me/s/${zaloAppId}` : "";
-  const qrSrc = deepLink
+  const prodUrl = zaloAppId ? `https://zalo.me/s/${zaloAppId}` : "";
+  const url = mode === "prod" ? prodUrl : devUrl.trim();
+
+  const qrSrc = url
     ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
-        deepLink
+        url
       )}&size=320x320&margin=12&qzone=2&color=1F2937&bgcolor=FFFFFF`
     : "";
 
   const copy = async () => {
+    if (!url) return;
     try {
-      await navigator.clipboard.writeText(deepLink);
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
       setErr("Trình duyệt không cho copy. Hãy chọn URL và copy thủ công.");
     }
+  };
+
+  const onDevUrlChange = (v: string) => {
+    setDevUrl(v);
+    localStorage.setItem(devUrlKey, v);
   };
 
   return (
@@ -70,7 +86,7 @@ export function QrModal({
       <div
         onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-2xl shadow-xl"
-        style={{ width: 380, maxWidth: "100%", padding: 24 }}
+        style={{ width: 440, maxWidth: "100%", padding: 24 }}
       >
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -88,13 +104,71 @@ export function QrModal({
           </button>
         </div>
 
+        {/* Mode tabs */}
+        <div className="grid grid-cols-2 mb-4 bg-slate-100 rounded-lg p-1">
+          <button
+            onClick={() => setMode("dev")}
+            className={
+              "py-1.5 text-sm rounded-md transition " +
+              (mode === "dev"
+                ? "bg-white text-slate-900 shadow-sm font-medium"
+                : "text-slate-500 hover:text-slate-800")
+            }
+          >
+            🧪 Dev / Test
+          </button>
+          <button
+            onClick={() => setMode("prod")}
+            className={
+              "py-1.5 text-sm rounded-md transition " +
+              (mode === "prod"
+                ? "bg-white text-slate-900 shadow-sm font-medium"
+                : "text-slate-500 hover:text-slate-800")
+            }
+          >
+            🚀 Production
+          </button>
+        </div>
+
+        {/* Dev mode: paste URL from `zmp deploy` log */}
+        {mode === "dev" && (
+          <div className="mb-3">
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              URL Dev / Testing (paste từ `zmp deploy`)
+            </label>
+            <input
+              value={devUrl}
+              onChange={(e) => onDevUrlChange(e.target.value)}
+              placeholder="https://zalo.me/s/1234567890/dev?v=1 hoặc URL Zalo cấp"
+              className="input font-mono text-xs"
+            />
+            <div className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+              Sau khi <code>npx zmp deploy</code> thành công, terminal in QR
+              kèm URL ở dòng <code>View app at:</code> — copy URL đó vào ô
+              trên, QR sẽ render lại. URL nhớ trong browser cho lần sau.
+            </div>
+          </div>
+        )}
+
+        {/* Prod mode: derived from zaloAppId */}
+        {mode === "prod" && !zaloAppId && (
+          <div className="text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-lg p-3 mb-3 leading-relaxed">
+            Tenant chưa có <code>zaloAppId</code> trong config. Để có link
+            production, mở tenant JSON trên Builder API và thêm:
+            <pre className="mt-1 bg-white rounded p-2 text-[10px] overflow-auto">
+              {`"zaloAppId": "1352472476106621006"`}
+            </pre>
+          </div>
+        )}
+
         {err && (
-          <div className="text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-lg p-3 mb-3">
+          <div className="text-xs bg-rose-50 text-rose-700 border border-rose-200 rounded-lg p-3 mb-3">
             {err}
           </div>
         )}
 
-        {qrSrc && (
+        {/* QR */}
+        {qrSrc ? (
           <div className="flex flex-col items-center">
             <img
               src={qrSrc}
@@ -102,20 +176,26 @@ export function QrModal({
               className="w-72 h-72 rounded-xl border border-slate-200"
             />
             <div className="text-xs text-slate-500 mt-3 text-center">
-              Mở app <strong>Zalo</strong> → góc trên phải → <strong>Quét QR</strong>
+              Mở app <strong>Zalo</strong> → góc trên phải →{" "}
+              <strong>Quét QR</strong>
             </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-72 text-slate-400 text-sm border border-dashed border-slate-300 rounded-xl">
+            {mode === "dev"
+              ? "Paste URL Dev ở trên để render QR"
+              : "Cần zaloAppId để render QR Production"}
           </div>
         )}
 
-        {deepLink && (
+        {/* URL bar with copy */}
+        {url && (
           <div className="mt-4">
-            <div className="text-xs font-medium text-slate-600 mb-1">
-              Deep link
-            </div>
+            <div className="text-xs font-medium text-slate-600 mb-1">URL</div>
             <div className="flex gap-2">
               <input
                 readOnly
-                value={deepLink}
+                value={url}
                 className="flex-1 input font-mono text-xs"
                 onFocus={(e) => e.currentTarget.select()}
               />
@@ -126,14 +206,26 @@ export function QrModal({
                 {copied ? "✓ Copied" : "Copy"}
               </button>
             </div>
-            <div className="text-[11px] text-slate-400 mt-2 leading-relaxed">
-              QR và link công khai chỉ mở được sau khi Mini App đã được Zalo
-              duyệt. Trong giai đoạn test, scan từ Zalo của developer (account
-              đã <code>zmp login</code>) hoặc tester đã được add ở
-              mini.zalo.me.
-            </div>
           </div>
         )}
+
+        <div className="text-[11px] text-slate-400 mt-4 leading-relaxed border-t border-slate-100 pt-3">
+          <strong className="text-slate-600">Lưu ý:</strong>
+          <ul className="mt-1 space-y-1 pl-4 list-disc">
+            <li>
+              <strong>Dev/Test</strong>: chỉ Zalo của developer + tester đã add
+              ở <code>mini.zalo.me</code> mới mở được.
+            </li>
+            <li>
+              <strong>Production</strong>: mở được cho mọi user sau khi Zalo
+              duyệt và phát hành version chính thức.
+            </li>
+            <li>
+              Nếu QR scan ra "ứng dụng đang phát triển" → cần dùng URL Dev
+              hoặc thêm tài khoản test ở Mini App Console.
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );
