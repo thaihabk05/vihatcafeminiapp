@@ -13,6 +13,7 @@
     "prefixCurrencySymbol": false,
     "headerLogo": "https://vihatcafeminiapp-production.up.railway.app/assets/logo.svg"
   },
+  "runtime": {},
   "banners": [
     {
       "id": "b1",

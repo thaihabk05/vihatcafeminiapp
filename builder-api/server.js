@@ -136,7 +136,16 @@ app.get("/api/apps/:appId/config", (req, res) => {
   res.json(data);
 });
 
-const SECTIONS = ["app", "template", "banners", "categories", "products"];
+const SECTIONS = [
+  "app",
+  "template",
+  "banners",
+  "categories",
+  "products",
+  // Runtime metadata: dev/test URLs written by the zmp-deploy wrapper.
+  // Shape: { zaloDevUrl?, zaloTestUrl?, zaloDevVersion?, lastDeployedAt? }
+  "runtime",
+];
 for (const section of SECTIONS) {
   app.get(`/api/apps/:appId/${section}`, (req, res) => {
     const data = readTenant(req.params.appId);

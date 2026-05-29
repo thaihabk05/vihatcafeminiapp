@@ -17,6 +17,7 @@
   "scripts": {
     "start": "zmp start",
     "deploy": "zmp deploy",
+    "deploy:auto": "node scripts/zmp-deploy.js",
     "build": "vite build --mode production",
     "start:web": "serve -s www -l ${PORT:-3000} --no-clipboard",
     "build:css": "postcss src/css/tailwind.css -o src/css/styles.css"

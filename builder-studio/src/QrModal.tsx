@@ -26,9 +26,13 @@ export function QrModal({
   const [name, setName] = useState<string>("");
   const [mode, setMode] = useState<Mode>("dev");
   const devUrlKey = `qr-dev-url-${appId}`;
-  const [devUrl, setDevUrl] = useState<string>(
-    () => localStorage.getItem(devUrlKey) || ""
-  );
+  const [devUrl, setDevUrl] = useState<string>("");
+  const [autoUrl, setAutoUrl] = useState<{
+    url: string;
+    deployedAt?: string;
+    version?: number;
+    env?: string;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -39,9 +43,23 @@ export function QrModal({
       .then((cfg) => {
         setZaloAppId(cfg.zaloAppId || null);
         setName(cfg.app?.title || appId);
+
+        // Pick up the URL the `deploy:auto` wrapper saved for this tenant.
+        const rt = cfg.runtime || {};
+        const apiUrl = rt.zaloDevUrl || rt.zaloTestUrl || "";
+        if (apiUrl) {
+          setAutoUrl({
+            url: apiUrl,
+            deployedAt: rt.lastDeployedAt,
+            version: rt.zaloDevVersion,
+            env: rt.lastDeployedEnv,
+          });
+          setDevUrl(apiUrl);
+        } else {
+          setDevUrl(localStorage.getItem(devUrlKey) || "");
+        }
       })
       .catch((e) => setErr(`Không tải được config: ${e.message}`));
-    setDevUrl(localStorage.getItem(devUrlKey) || "");
   }, [appId, devUrlKey]);
 
   const prodUrl = zaloAppId ? `https://zalo.me/s/${zaloAppId}` : "";
@@ -130,22 +148,51 @@ export function QrModal({
           </button>
         </div>
 
-        {/* Dev mode: paste URL from `zmp deploy` log */}
+        {/* Dev mode: auto from API + manual override */}
         {mode === "dev" && (
           <div className="mb-3">
+            {autoUrl && (
+              <div className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg p-2.5 mb-2 leading-relaxed">
+                ✓ Tự động từ <code>deploy:auto</code>
+                {autoUrl.deployedAt && (
+                  <>
+                    {" "}
+                    · cập nhật{" "}
+                    {new Date(autoUrl.deployedAt).toLocaleString("vi-VN")}
+                  </>
+                )}
+                {autoUrl.version && (
+                  <>
+                    {" "}
+                    · v{autoUrl.version} {autoUrl.env || ""}
+                  </>
+                )}
+              </div>
+            )}
             <label className="block text-xs font-medium text-slate-600 mb-1">
-              URL Dev / Testing (paste từ `zmp deploy`)
+              URL Dev / Testing
             </label>
             <input
               value={devUrl}
               onChange={(e) => onDevUrlChange(e.target.value)}
-              placeholder="https://zalo.me/s/1234567890/dev?v=1 hoặc URL Zalo cấp"
+              placeholder="https://zalo.me/s/... (chạy npm run deploy:auto để tự fill)"
               className="input font-mono text-xs"
             />
             <div className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-              Sau khi <code>npx zmp deploy</code> thành công, terminal in QR
-              kèm URL ở dòng <code>View app at:</code> — copy URL đó vào ô
-              trên, QR sẽ render lại. URL nhớ trong browser cho lần sau.
+              <strong>Tự động</strong>: chạy <code>ADMIN_TOKEN=… npm run
+              deploy:auto</code> trong vihat-coffee, URL sẽ tự lưu về Builder
+              API và render QR ngay khi anh mở modal này.
+              <br />
+              <strong>Thủ công</strong>: dán URL từ output <code>npx zmp
+              deploy</code> hoặc copy QR data từ <a
+                href="https://mini.zalo.me"
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                mini.zalo.me
+              </a>{" "}
+              dashboard. URL lưu vào browser.
             </div>
           </div>
         )}
