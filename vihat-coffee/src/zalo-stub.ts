@@ -1,52 +1,88 @@
 /**
- * Browser-mode stub for the Zalo native bridge.
+ * Browser-mode stub for the Zalo SDK.
  *
- * `zmp-sdk` and `zmp-ui` call into the Zalo runtime at mount time (login,
- * getSystemInfo, etc.). Outside Zalo those calls reject and the Mini App
- * blanks. Importing this file installs a minimal stub on `window` so the
- * SDK silently no-ops instead of throwing.
+ * Outside Zalo (Studio preview iframe, Railway healthcheck, normal browser):
+ *   1. `zmp-sdk` initialises its `appEnv` from the URL — both `isMp` and
+ *      `isMpWeb` come out `false`, so every API (login, getSystemInfo, …)
+ *      rejects with `{code: -2000, api: <name>}`.
+ *   2. `zmp-ui`'s `<App>` calls `login()` on mount. The rejection cascades:
+ *      `<App>` never mounts its children → `<ZMPRouter>` never provides
+ *      context → every component using `useNavigate` from zmp-ui throws.
  *
- * This file MUST be imported before any module that touches `zmp-sdk`.
+ * The fix that lets the full UI render outside Zalo:
+ *   - Mutate `appEnv.isMpWeb = true` so the SDK takes its "web preview"
+ *     branch and resolves with empty strings instead of rejecting.
+ *   - Install minimal window bridges that the SDK pokes at for things like
+ *     status-bar height.
+ *
+ * This file MUST be imported before anything else that touches `zmp-sdk`
+ * or `zmp-ui`, otherwise the SDK runs with the unpatched values.
  */
-if (typeof window !== "undefined" && !(window as any).ZaloJavaScriptInterface) {
-  (window as any).__VIHAT_ZALO_STUB = true;
-  const noop = () => {};
-  const mockReturn = () => ({});
+import appEnv from "zmp-sdk/apis/appEnv";
 
-  // Generic bridge — many SDK calls funnel through this.
-  (window as any).ZaloJavaScriptInterface = new Proxy(
-    {
-      getStatusBarHeight: () => 0,
-    },
+declare global {
+  interface Window {
+    __VIHAT_ZALO_STUB?: boolean;
+    ZaloJavaScriptInterface?: {
+      getStatusBarHeight: () => number;
+      [k: string]: any;
+    };
+    zmp?: unknown;
+    webkit?: { messageHandlers?: Record<string, { postMessage: Function }> };
+  }
+}
+
+if (typeof window !== "undefined" && !window.ZaloJavaScriptInterface) {
+  window.__VIHAT_ZALO_STUB = true;
+
+  // Flip the SDK into "web preview" mode. login() etc. now resolve quietly.
+  if (appEnv && typeof appEnv === "object") {
+    (appEnv as any).isMpWeb = true;
+  }
+
+  // ZMPRouter computes `basename = "/zapps/" + window.APP_ID` in production
+  // builds. With no APP_ID and a URL of "/" the basename never matches and
+  // every route renders empty. Set APP_ID to an empty string and make sure
+  // the URL sits under /zapps/ so the router can mount at root.
+  if (!(window as any).APP_ID) (window as any).APP_ID = "";
+  if (!window.location.pathname.startsWith("/zapps/")) {
+    const target = "/zapps/" + window.location.search + window.location.hash;
+    history.replaceState(null, "", target);
+  }
+
+  const noop = () => 0;
+  // Android-style bridge — many SDK calls funnel through this.
+  window.ZaloJavaScriptInterface = new Proxy(
+    { getStatusBarHeight: () => 0 },
     {
       get(target, prop: string) {
         if (prop in target) return (target as any)[prop];
         return noop;
       },
     }
-  );
+  ) as Window["ZaloJavaScriptInterface"];
 
   // iOS-style bridge.
-  if (!(window as any).webkit) (window as any).webkit = {};
-  if (!(window as any).webkit.messageHandlers) {
-    (window as any).webkit.messageHandlers = {};
-  }
-  (window as any).webkit.messageHandlers.zmp = { postMessage: noop };
+  if (!window.webkit) window.webkit = {};
+  if (!window.webkit.messageHandlers) window.webkit.messageHandlers = {};
+  window.webkit.messageHandlers.zmp = { postMessage: () => {} };
 
-  // Some flows look for a top-level zmp object too.
-  if (!(window as any).zmp) {
-    (window as any).zmp = new Proxy(
+  // Some flows look for a generic zmp object.
+  if (!window.zmp) {
+    window.zmp = new Proxy(
       {},
       {
         get(_, prop: string) {
           if (prop === "then") return undefined;
-          return mockReturn;
+          return () => ({});
         },
       }
     );
   }
 
-  console.info("[shell] installed zalo-stub for browser-mode preview");
+  console.info(
+    "[shell] zalo-stub installed: appEnv.isMpWeb=true, bridges mounted"
+  );
 }
 
 export {};
