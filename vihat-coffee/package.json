@@ -17,6 +17,8 @@
   "scripts": {
     "start": "zmp start",
     "deploy": "zmp deploy",
+    "build": "vite build --mode production",
+    "start:web": "serve -s www -l ${PORT:-3000} --no-clipboard",
     "build:css": "postcss src/css/tailwind.css -o src/css/styles.css"
   },
   "zmpConfig": {
@@ -34,6 +36,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.2",
     "recoil": "^0.7.7",
+    "serve": "^14.2.4",
     "swiper": "^9.1.0",
     "zmp-sdk": "^2.39.9",
     "zmp-ui": "^1.11.5"
