@@ -1,0 +1,44 @@
+{
+  "appId": "saigon-bistro",
+  "industry": "fnb-restaurant",
+  "app": {
+    "title": "Sài Gòn Bistro",
+    "tagline": "Ẩm thực Việt · Đặt bàn · Giao tận nơi qua Zalo"
+  },
+  "template": {
+    "primaryColor": "#1B7F5A",
+    "backgroundColor": "#f6f7f4",
+    "currencySymbol": "đ",
+    "prefixCurrencySymbol": false,
+    "headerLogo": ""
+  },
+  "banners": [
+    {
+      "id": "b1",
+      "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/banner-3.webp",
+      "title": "Set menu cuối tuần · 199K"
+    },
+    {
+      "id": "b2",
+      "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/banner-4.webp",
+      "title": "Đặt bàn online · Tặng khai vị"
+    }
+  ],
+  "categories": [
+    { "id": "main", "name": "Món chính", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-food.svg" },
+    { "id": "appetizer", "name": "Khai vị", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-bread.svg" },
+    { "id": "soup", "name": "Canh & Lẩu", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-matcha.svg" },
+    { "id": "drink", "name": "Đồ uống", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-drinks.svg" },
+    { "id": "dessert", "name": "Tráng miệng", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-juice.svg" }
+  ],
+  "products": [
+    { "id": 1, "name": "Bò lúc lắc khoai tây", "price": 159000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-4.webp", "description": "Bò Úc xào tiêu đen, khoai chiên giòn, ăn kèm xà lách dầu giấm.", "categoryId": ["main"], "variantId": ["size"] },
+    { "id": 2, "name": "Cá lóc kho tộ", "price": 129000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-3.webp", "description": "Cá lóc đồng kho nước dừa tươi, đậm vị Nam Bộ.", "categoryId": ["main"], "variantId": ["size"] },
+    { "id": 3, "name": "Gỏi cuốn tôm thịt", "price": 65000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-3.webp", "description": "5 cuốn tôm thịt tươi, ăn kèm tương đậu phộng nhà làm.", "categoryId": ["appetizer"], "variantId": ["size"] },
+    { "id": 4, "name": "Canh chua cá basa", "price": 89000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-2.webp", "description": "Canh chua miền Tây, cá basa, dứa, đậu bắp, ngò gai.", "categoryId": ["soup"], "variantId": ["size"] },
+    { "id": 5, "name": "Lẩu mắm Châu Đốc", "price": 299000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-3.webp", "description": "Lẩu mắm cho 2-3 người, đầy đủ hải sản và rau đồng.", "categoryId": ["soup"], "variantId": ["size"] },
+    { "id": 6, "name": "Trà đào cam sả", "price": 39000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-8.webp", "description": "Trà đào tươi, sả, cam vắt, tốt cho tiêu hóa.", "categoryId": ["drink"], "variantId": ["size"] },
+    { "id": 7, "name": "Chè khúc bạch", "price": 35000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-5.webp", "description": "Chè khúc bạch sữa hạnh nhân, vải, lá dứa.", "categoryId": ["dessert"], "variantId": ["size"] },
+    { "id": 8, "name": "Set menu Gia đình 4 người", "price": 599000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-1.webp", "sale": { "type": "percent", "percent": 0.15 }, "description": "5 món + canh + tráng miệng cho 4 người. Giảm 15% khi đặt qua Mini App.", "categoryId": ["main"], "variantId": ["size"] }
+  ]
+}

@@ -1,0 +1,22 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF7A3A"/>
+      <stop offset="1" stop-color="#C73A0E"/>
+    </linearGradient>
+    <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFE3D1"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <g stroke="#FFE3D1" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.7">
+    <path d="M 100 56 Q 92 72 100 88 Q 108 104 100 120"/>
+    <path d="M 128 44 Q 120 64 128 84 Q 136 104 128 124"/>
+    <path d="M 156 56 Q 148 72 156 88 Q 164 104 156 120"/>
+  </g>
+  <path d="M 186 156 Q 222 156 222 188 Q 222 216 192 216" stroke="#FFFFFF" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M 70 140 L 186 140 L 178 212 Q 175 230 156 230 L 100 230 Q 81 230 78 212 Z" fill="url(#cup)"/>
+  <text x="128" y="204" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-weight="900" font-size="64" fill="#E94E1B" text-anchor="middle">V</text>
+  <rect x="70" y="232" width="116" height="6" rx="3" fill="#C73A0E"/>
+</svg>

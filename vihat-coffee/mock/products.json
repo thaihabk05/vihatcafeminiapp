@@ -1,0 +1,113 @@
+[
+  {
+    "id": 1,
+    "name": "Cà phê Caramel Latte",
+    "price": 35000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-1.webp",
+    "description": "Caramel Latte đậm vị, ngọt dịu — signature của OmiCafé. Pha từ hạt Arabica Cầu Đất rang mộc.",
+    "categoryId": ["coffee", "drinks"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 2,
+    "name": "Mocha Frappuccino đá xay",
+    "price": 45000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-2.webp",
+    "description": "Đá xay mocha kem tươi, topping chocolate. Phù hợp cho buổi chiều Sài Gòn.",
+    "categoryId": ["coffee"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 3,
+    "name": "Bánh mì thịt nướng",
+    "price": 30000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-3.webp",
+    "description": "Bánh mì giòn rụm, thịt nướng tẩm ướp công thức riêng, ăn kèm pate và đồ chua.",
+    "categoryId": ["food", "bread"],
+    "variantId": ["size"]
+  },
+  {
+    "id": 4,
+    "name": "Pizza phô mai bò BBQ",
+    "price": 28000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-4.webp",
+    "description": "Pizza đế mỏng, phô mai mozzarella tan chảy, thịt bò BBQ thơm lừng.",
+    "categoryId": ["food"],
+    "variantId": ["size"]
+  },
+  {
+    "id": 5,
+    "name": "Cà phê Vanilla Latte",
+    "price": 35000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-5.webp",
+    "description": "Sự kết hợp giữa Espresso, sữa nóng và hương vani Pháp nguyên chất.",
+    "categoryId": ["coffee", "matcha"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 6,
+    "name": "Caramel Macchiato",
+    "price": 38000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-6.webp",
+    "description": "Tầng espresso, sữa, foam và caramel layer, ngọt vừa, beo béo.",
+    "categoryId": ["coffee", "milktea"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 7,
+    "name": "Espresso nguyên chất",
+    "price": 32000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-7.webp",
+    "description": "Shot espresso đậm đắng từ hạt Robusta + Arabica blend, dành cho dân nghiền cafe.",
+    "categoryId": ["coffee"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 8,
+    "name": "Trà xanh Latte (Matcha)",
+    "price": 25000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-8.webp",
+    "description": "Matcha Uji Nhật Bản đánh tay, kết hợp sữa tươi tạo lớp foam mịn.",
+    "categoryId": ["matcha"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 9,
+    "name": "Combo 3 ly cafe HOT - Tiết kiệm 20%",
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-1.webp",
+    "price": 25000,
+    "sale": {
+      "type": "percent",
+      "percent": 0.2
+    },
+    "description": "Mua 3 ly bất kỳ — giảm ngay 20%. Áp dụng cho khách thành viên OmiCafé.",
+    "categoryId": ["coffee", "milktea", "drinks"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 10,
+    "name": "Combo Hi-Tea cho 2 người",
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-2.webp",
+    "price": 57000,
+    "sale": {
+      "type": "fixed",
+      "amount": 7000
+    },
+    "description": "2 ly trà + 1 bánh ngọt cho buổi chiều đôi. Tặng kèm 1 voucher 10%.",
+    "categoryId": ["coffee", "drinks"],
+    "variantId": ["size", "topping"]
+  },
+  {
+    "id": 11,
+    "name": "Combo Trà sữa - Đại tiệc 50% OFF",
+    "price": 55000,
+    "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-3.webp",
+    "description": "Combo 2 ly trà sữa size L, freeship cho đơn trên 100k qua Zalo Mini App.",
+    "categoryId": ["milktea"],
+    "variantId": ["size", "topping"],
+    "sale": {
+      "type": "percent",
+      "percent": 0.5
+    }
+  }
+]

@@ -1,0 +1,43 @@
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1F1B2E"/>
+      <stop offset="0.55" stop-color="#3D2A4F"/>
+      <stop offset="1" stop-color="#7A3A1C"/>
+    </linearGradient>
+    <radialGradient id="spark" cx="0.7" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFB37A" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#FFB37A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="400" fill="url(#g3)"/>
+  <rect width="800" height="400" fill="url(#spark)"/>
+  <g fill="#FFD8B5" opacity="0.18">
+    <circle cx="120" cy="90" r="2"/>
+    <circle cx="200" cy="50" r="1.5"/>
+    <circle cx="280" cy="120" r="2"/>
+    <circle cx="650" cy="80" r="1.5"/>
+    <circle cx="720" cy="160" r="2"/>
+    <circle cx="160" cy="320" r="2"/>
+    <circle cx="240" cy="370" r="1.5"/>
+    <circle cx="700" cy="300" r="2"/>
+    <circle cx="580" cy="350" r="1.5"/>
+  </g>
+  <g transform="translate(560 90)" opacity="0.95">
+    <rect x="0" y="40" width="180" height="220" rx="16" fill="#E94E1B"/>
+    <rect x="6" y="46" width="168" height="208" rx="12" fill="none" stroke="#FFD8B5" stroke-width="1" stroke-dasharray="3 3"/>
+    <text x="90" y="100" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="900" font-size="20" fill="#FFFFFF" text-anchor="middle">VIHAT</text>
+    <text x="90" y="125" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="700" font-size="13" fill="#FFE3D1" text-anchor="middle">MEMBER CARD</text>
+    <line x1="20" y1="150" x2="160" y2="150" stroke="#FFE3D1" opacity="0.4"/>
+    <text x="90" y="190" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="900" font-size="34" fill="#FFFFFF" text-anchor="middle">★ GOLD</text>
+    <text x="90" y="225" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="700" font-size="12" fill="#FFE3D1" text-anchor="middle" opacity="0.85">đ.t.h***@vihat</text>
+    <text x="90" y="248" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="500" font-size="10" fill="#FFE3D1" text-anchor="middle" opacity="0.7">2026.05 → 2027.05</text>
+  </g>
+  <rect x="50" y="60" rx="22" width="200" height="44" fill="#FFFFFF"/>
+  <text x="150" y="90" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="900" font-size="18" fill="#3D2A4F" text-anchor="middle">★ THÀNH VIÊN VIP</text>
+  <text x="50" y="180" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="900" font-size="56" fill="#FFFFFF">Tích điểm</text>
+  <text x="50" y="242" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="900" font-size="50" fill="#FFB37A">Đổi voucher</text>
+  <text x="50" y="285" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="500" font-size="20" fill="#FFD8B5" opacity="0.9">Mua 10 ly · tặng 1 ly miễn phí · ưu đãi sinh nhật</text>
+  <rect x="50" y="318" rx="30" width="240" height="58" fill="#FFFFFF"/>
+  <text x="170" y="356" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif" font-weight="900" font-size="20" fill="#3D2A4F" text-anchor="middle">ĐĂNG KÝ →</text>
+</svg>

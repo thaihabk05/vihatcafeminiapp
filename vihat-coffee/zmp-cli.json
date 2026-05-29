@@ -1,0 +1,20 @@
+{
+  "appId": "1352472476106621006",
+  "cwd": "/Users/dinhthaiha/Coding/MiniApp/vihat-coffee",
+  "name": "ViHAT Cafe",
+  "framework": "react-typescript",
+  "cssPreProcessor": "scss",
+  "includeTailwind": true,
+  "package": "zmp-ui",
+  "stateManagement": "recoil",
+  "newProject": false,
+  "template": "single-view",
+  "theming": {
+    "customColor": true,
+    "color": "#E94E1B",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false,
+    "useUiKits": true
+  }
+}

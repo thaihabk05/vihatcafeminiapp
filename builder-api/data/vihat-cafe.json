@@ -1,0 +1,55 @@
+{
+  "appId": "vihat-cafe",
+  "zaloAppId": "1352472476106621006",
+  "industry": "fnb-coffee",
+  "app": {
+    "title": "ViHAT Cafe",
+    "tagline": "Cà phê chuẩn vị · Đặt qua Zalo · Tích điểm tự động"
+  },
+  "template": {
+    "primaryColor": "#E94E1B",
+    "backgroundColor": "#f4f5f6",
+    "currencySymbol": "đ",
+    "prefixCurrencySymbol": false,
+    "headerLogo": "http://127.0.0.1:4000/assets/logo.svg"
+  },
+  "banners": [
+    {
+      "id": "b1",
+      "image": "http://127.0.0.1:4000/assets/banner-1.svg",
+      "title": "Khai trương ViHAT Cafe · Giảm 50% ly đầu tiên"
+    },
+    {
+      "id": "b2",
+      "image": "http://127.0.0.1:4000/assets/banner-2.svg",
+      "title": "Combo trà chiều cho 2 người · 99K"
+    },
+    {
+      "id": "b3",
+      "image": "http://127.0.0.1:4000/assets/banner-3.svg",
+      "title": "Thành viên ViHAT · Tích điểm đổi voucher"
+    }
+  ],
+  "categories": [
+    { "id": "coffee", "name": "Cà phê", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-coffee.svg" },
+    { "id": "matcha", "name": "Trà xanh", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-matcha.svg" },
+    { "id": "food", "name": "Đồ ăn vặt", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-food.svg" },
+    { "id": "milktea", "name": "Trà sữa", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-milktea.svg" },
+    { "id": "drinks", "name": "Giải khát", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-drinks.svg" },
+    { "id": "bread", "name": "Bánh mỳ", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-bread.svg" },
+    { "id": "juice", "name": "Nước ép", "icon": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/category-juice.svg" }
+  ],
+  "products": [
+    { "id": 1, "name": "Cà phê Caramel Latte", "price": 35000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-1.webp", "description": "Caramel Latte đậm vị, ngọt dịu — signature của ViHAT Cafe.", "categoryId": ["coffee", "drinks"], "variantId": ["size", "topping"] },
+    { "id": 2, "name": "Mocha Frappuccino đá xay", "price": 45000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-2.webp", "description": "Đá xay mocha kem tươi, topping chocolate.", "categoryId": ["coffee"], "variantId": ["size", "topping"] },
+    { "id": 3, "name": "Bánh mì thịt nướng", "price": 30000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-3.webp", "description": "Bánh mì giòn rụm, thịt nướng tẩm ướp công thức riêng.", "categoryId": ["food", "bread"], "variantId": ["size"] },
+    { "id": 4, "name": "Pizza phô mai bò BBQ", "price": 28000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-4.webp", "description": "Pizza đế mỏng, phô mai mozzarella tan chảy.", "categoryId": ["food"], "variantId": ["size"] },
+    { "id": 5, "name": "Cà phê Vanilla Latte", "price": 35000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-5.webp", "description": "Espresso, sữa nóng và hương vani Pháp nguyên chất.", "categoryId": ["coffee", "matcha"], "variantId": ["size", "topping"] },
+    { "id": 6, "name": "Caramel Macchiato", "price": 38000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-6.webp", "description": "Tầng espresso, sữa, foam và caramel layer.", "categoryId": ["coffee", "milktea"], "variantId": ["size", "topping"] },
+    { "id": 7, "name": "Espresso nguyên chất", "price": 32000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-7.webp", "description": "Shot espresso đậm đắng từ hạt Robusta + Arabica.", "categoryId": ["coffee"], "variantId": ["size", "topping"] },
+    { "id": 8, "name": "Trà xanh Latte (Matcha)", "price": 25000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-square-8.webp", "description": "Matcha Uji Nhật Bản đánh tay với sữa tươi.", "categoryId": ["matcha"], "variantId": ["size", "topping"] },
+    { "id": 9, "name": "Combo 3 ly cafe HOT - Tiết kiệm 20%", "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-1.webp", "price": 25000, "sale": { "type": "percent", "percent": 0.2 }, "description": "Mua 3 ly bất kỳ — giảm ngay 20% cho thành viên.", "categoryId": ["coffee", "milktea", "drinks"], "variantId": ["size", "topping"] },
+    { "id": 10, "name": "Combo Hi-Tea cho 2 người", "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-2.webp", "price": 99000, "sale": { "type": "fixed", "amount": 10000 }, "description": "2 ly trà + 1 bánh ngọt. Tặng kèm voucher 10%.", "categoryId": ["coffee", "drinks"], "variantId": ["size", "topping"] },
+    { "id": 11, "name": "Combo Trà sữa - Đại tiệc 50% OFF", "price": 55000, "image": "https://stc-zmp.zadn.vn/templates/zaui-coffee/dummy/product-rect-3.webp", "description": "Combo 2 ly trà sữa size L, freeship trên 100k.", "categoryId": ["milktea"], "variantId": ["size", "topping"], "sale": { "type": "percent", "percent": 0.5 } }
+  ]
+}
