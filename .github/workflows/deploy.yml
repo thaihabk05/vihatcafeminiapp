@@ -1,0 +1,77 @@
+name: Deploy Mini App to Zalo
+
+on:
+  # Triggered from Builder Studio via repository_dispatch
+  repository_dispatch:
+    types: [studio-deploy]
+  # Also runnable manually from GitHub UI
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: "Tenant slug"
+        required: true
+        default: "vihat-cafe"
+      env:
+        description: "Deploy environment"
+        type: choice
+        options:
+          - DEVELOPMENT
+          - TESTING
+        default: DEVELOPMENT
+      description:
+        description: "Version description"
+        required: false
+        default: "Deploy from Studio"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vihat-coffee
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: vihat-coffee/package-lock.json
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Configure zmp-cli auth
+        run: |
+          mkdir -p $HOME/.zmp
+          cat > $HOME/.zmp/config.json <<EOF
+          {
+            "accessToken": "${{ secrets.ZMP_TOKEN }}",
+            "appId": "1352472476106621006"
+          }
+          EOF
+          echo "ZMP_TOKEN=${{ secrets.ZMP_TOKEN }}" >> $GITHUB_ENV
+          echo "APP_ID=1352472476106621006" >> $GITHUB_ENV
+
+      - name: Build production bundle
+        env:
+          VITE_API_BASE: ${{ secrets.BUILDER_API_BASE }}
+          VITE_DEFAULT_APP_ID: ${{ github.event.client_payload.tenant || inputs.tenant }}
+        run: npm run build
+
+      - name: Deploy to Zalo + auto-save URL
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          BUILDER_API_BASE: ${{ secrets.BUILDER_API_BASE }}
+          VITE_DEFAULT_APP_ID: ${{ github.event.client_payload.tenant || inputs.tenant }}
+          DEPLOY_ENV: ${{ github.event.client_payload.env || inputs.env }}
+          DEPLOY_DESC: ${{ github.event.client_payload.description || inputs.description }}
+        run: |
+          FLAGS="-e -p"
+          if [ "$DEPLOY_ENV" = "TESTING" ]; then FLAGS="$FLAGS -t"; fi
+          node scripts/zmp-deploy.js $FLAGS -m "$DEPLOY_DESC"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "::notice::Deploy finished for tenant ${{ github.event.client_payload.tenant || inputs.tenant }} env ${{ github.event.client_payload.env || inputs.env }}"

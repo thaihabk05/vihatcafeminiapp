@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { API_BASE } from "./api";
+import { useEffect, useRef, useState } from "react";
+import { API_BASE, getToken } from "./api";
 
 type Mode = "dev" | "prod";
 
@@ -35,6 +35,12 @@ export function QrModal({
   } | null>(null);
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [deployBusy, setDeployBusy] = useState(false);
+  const [deployMsg, setDeployMsg] = useState<string | null>(null);
+  const [deployEnv, setDeployEnv] = useState<"DEVELOPMENT" | "TESTING">(
+    "DEVELOPMENT"
+  );
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     setErr(null);
@@ -86,6 +92,82 @@ export function QrModal({
     setDevUrl(v);
     localStorage.setItem(devUrlKey, v);
   };
+
+  /**
+   * Fire-and-watch deploy: ask the Builder API to dispatch the GitHub
+   * Actions workflow, then poll the tenant config until `lastDeployedAt`
+   * advances past the trigger time. When that happens the new dev URL is
+   * already in `runtime` and we flip the modal to show it.
+   */
+  const triggerDeploy = async () => {
+    setErr(null);
+    setDeployMsg(null);
+    setDeployBusy(true);
+    try {
+      const r = await fetch(`${API_BASE}/api/apps/${appId}/trigger-deploy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": getToken(),
+        },
+        body: JSON.stringify({
+          env: deployEnv,
+          description: `Deploy ${deployEnv} from Studio`,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || `${r.status}`);
+
+      const triggeredAt = new Date(data.triggeredAt).getTime();
+      setDeployMsg(
+        `Đã trigger GitHub Actions (${data.env}). Đợi Zalo upload + capture URL…`
+      );
+
+      // Poll runtime until lastDeployedAt > triggeredAt.
+      const started = Date.now();
+      const tick = async () => {
+        if (Date.now() - started > 5 * 60_000) {
+          setDeployBusy(false);
+          setDeployMsg(
+            "Timeout 5 phút — kiểm tra GitHub Actions tab nếu deploy bị stuck."
+          );
+          return;
+        }
+        try {
+          const cr = await fetch(`${API_BASE}/api/apps/${appId}/config`);
+          const cfg = await cr.json();
+          const rt = cfg.runtime || {};
+          const last = rt.lastDeployedAt
+            ? new Date(rt.lastDeployedAt).getTime()
+            : 0;
+          if (last > triggeredAt && (rt.zaloDevUrl || rt.zaloTestUrl)) {
+            const url = rt.zaloDevUrl || rt.zaloTestUrl;
+            setAutoUrl({
+              url,
+              deployedAt: rt.lastDeployedAt,
+              version: rt.zaloDevVersion,
+              env: rt.lastDeployedEnv,
+            });
+            setDevUrl(url);
+            setDeployBusy(false);
+            setDeployMsg(`✓ Deploy xong (v${rt.zaloDevVersion}). QR đã sẵn.`);
+            return;
+          }
+        } catch {}
+        pollRef.current = window.setTimeout(tick, 5000);
+      };
+      pollRef.current = window.setTimeout(tick, 5000);
+    } catch (e: any) {
+      setDeployBusy(false);
+      setErr(e.message || "Trigger deploy lỗi.");
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearTimeout(pollRef.current);
+    };
+  }, []);
 
   return (
     <div
@@ -151,9 +233,39 @@ export function QrModal({
         {/* Dev mode: auto from API + manual override */}
         {mode === "dev" && (
           <div className="mb-3">
+            {/* One-click deploy section */}
+            <div className="border border-slate-200 rounded-lg p-3 mb-3 bg-slate-50">
+              <div className="text-xs font-medium text-slate-700 mb-2">
+                🚀 Deploy thẳng từ Studio
+              </div>
+              <div className="flex gap-2 items-center">
+                <select
+                  value={deployEnv}
+                  onChange={(e) => setDeployEnv(e.target.value as any)}
+                  disabled={deployBusy}
+                  className="input flex-none w-36 text-xs"
+                >
+                  <option value="DEVELOPMENT">Development</option>
+                  <option value="TESTING">Testing</option>
+                </select>
+                <button
+                  onClick={triggerDeploy}
+                  disabled={deployBusy}
+                  className="flex-1 bg-vihat text-white text-sm font-medium rounded px-3 py-1.5 disabled:opacity-50"
+                >
+                  {deployBusy ? "Đang deploy…" : "Deploy now"}
+                </button>
+              </div>
+              {deployMsg && (
+                <div className="text-[11px] text-slate-600 mt-2 leading-relaxed">
+                  {deployMsg}
+                </div>
+              )}
+            </div>
+
             {autoUrl && (
               <div className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg p-2.5 mb-2 leading-relaxed">
-                ✓ Tự động từ <code>deploy:auto</code>
+                ✓ URL tự động từ Builder API
                 {autoUrl.deployedAt && (
                   <>
                     {" "}

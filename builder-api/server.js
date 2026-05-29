@@ -170,6 +170,79 @@ app.get("/api/admin/check", requireAuth, (_req, res) =>
   res.json({ ok: true, authed: true })
 );
 
+/**
+ * Trigger a GitHub Actions deploy via `repository_dispatch`.
+ *
+ * Requires the following env on the API server:
+ *   GITHUB_TOKEN   PAT with `repo` scope
+ *   GITHUB_REPO    "owner/repo" e.g. "thaihabk05/vihatcafeminiapp"
+ *
+ * Body: { env: "DEVELOPMENT" | "TESTING", description?: string }
+ */
+app.post("/api/apps/:appId/trigger-deploy", requireAuth, async (req, res) => {
+  const { appId } = req.params;
+  const data = readTenant(appId);
+  if (!data) return res.status(404).json({ error: "tenant not found" });
+
+  const GH_TOKEN = process.env.GITHUB_TOKEN;
+  const GH_REPO = process.env.GITHUB_REPO;
+  if (!GH_TOKEN || !GH_REPO) {
+    return res.status(503).json({
+      error:
+        "GitHub deploy not configured. Set GITHUB_TOKEN and GITHUB_REPO env vars on the Builder API service.",
+    });
+  }
+
+  const body = req.body || {};
+  const env =
+    body.env === "TESTING" || body.env === "DEVELOPMENT"
+      ? body.env
+      : "DEVELOPMENT";
+  const description =
+    typeof body.description === "string" && body.description.trim()
+      ? body.description.trim().slice(0, 120)
+      : `Deploy from Studio — ${new Date().toISOString().slice(0, 16)}`;
+
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${GH_TOKEN}`,
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event_type: "studio-deploy",
+          client_payload: { tenant: appId, env, description },
+        }),
+      }
+    );
+    if (!r.ok) {
+      const txt = await r.text();
+      return res
+        .status(502)
+        .json({ error: `GitHub dispatch failed (${r.status}): ${txt.slice(0, 200)}` });
+    }
+    // Record the trigger so the Studio can poll for runtime changes.
+    data.runtime = data.runtime || {};
+    data.runtime.lastTriggeredAt = new Date().toISOString();
+    data.runtime.lastTriggeredEnv = env;
+    writeTenant(appId, data);
+    res.json({
+      ok: true,
+      env,
+      description,
+      triggeredAt: data.runtime.lastTriggeredAt,
+      actionsUrl: `https://github.com/${GH_REPO}/actions/workflows/deploy.yml`,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/health", (_req, res) =>
   res.json({
     ok: true,
