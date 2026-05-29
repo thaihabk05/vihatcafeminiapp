@@ -1,0 +1,9 @@
+{
+  "name": "vihat-miniapp-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Top-level helper scripts. Each app lives in its own subfolder with its own package.json.",
+  "scripts": {
+    "sync:zmp": "node scripts/sync-zmp-token.js"
+  }
+}

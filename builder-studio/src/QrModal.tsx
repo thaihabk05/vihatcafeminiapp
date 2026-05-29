@@ -4,6 +4,89 @@ import { API_BASE, getToken } from "./api";
 type Mode = "dev" | "prod";
 
 /**
+ * Small inline panel for pasting a refreshed ZMP_TOKEN. The Builder API
+ * encrypts it with the GitHub repo public key and stores it as the
+ * `ZMP_TOKEN` Actions secret — so the next "Deploy now" works.
+ */
+function ZmpTokenPanel({ onClose }: { onClose: () => void }) {
+  const [token, setTokenStr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    setErr(null);
+    setMsg(null);
+    if (!token || token.length < 50) {
+      setErr("Token có vẻ quá ngắn. Lấy lại bằng `npx zmp login`.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await fetch(`${API_BASE}/api/admin/zmp-token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": getToken(),
+        },
+        body: JSON.stringify({ token: token.trim() }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || `${r.status}`);
+      const ts = data.expiresAt
+        ? ` · hết hạn ${new Date(data.expiresAt).toLocaleString("vi-VN")}`
+        : "";
+      setMsg(`✓ Token đã đẩy lên GitHub${ts}`);
+      setTokenStr("");
+    } catch (e: any) {
+      setErr(e.message || "Không cập nhật được token.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 mt-2">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="text-xs font-medium text-amber-900">
+          🔄 Cập nhật ZMP Token
+        </div>
+        <button
+          onClick={onClose}
+          className="text-amber-900 text-sm leading-none"
+        >
+          ×
+        </button>
+      </div>
+      <div className="text-[11px] text-amber-800 leading-relaxed mb-2">
+        Lấy token sau khi <code>npx zmp login</code>:
+        <code className="block bg-white rounded px-1.5 py-0.5 mt-1 font-mono">
+          grep ZMP_TOKEN .env | cut -d= -f2-
+        </code>
+      </div>
+      <textarea
+        value={token}
+        onChange={(e) => setTokenStr(e.target.value)}
+        placeholder="Paste ZMP_TOKEN (eyJ0eXAi…)"
+        rows={3}
+        className="input font-mono text-[10px]"
+      />
+      {err && <div className="text-[11px] text-rose-700 mt-1">{err}</div>}
+      {msg && (
+        <div className="text-[11px] text-emerald-700 mt-1">{msg}</div>
+      )}
+      <button
+        onClick={submit}
+        disabled={busy || !token}
+        className="mt-2 bg-amber-600 text-white text-xs px-3 py-1.5 rounded font-medium disabled:opacity-50"
+      >
+        {busy ? "Đang đẩy…" : "Đẩy lên GitHub Secret"}
+      </button>
+    </div>
+  );
+}
+
+/**
  * Modal showing the Zalo Mini App QR for the current tenant.
  *
  * Two modes:
@@ -40,6 +123,7 @@ export function QrModal({
   const [deployEnv, setDeployEnv] = useState<"DEVELOPMENT" | "TESTING">(
     "DEVELOPMENT"
   );
+  const [tokenModalOpen, setTokenModalOpen] = useState(false);
   const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -261,6 +345,13 @@ export function QrModal({
                   {deployMsg}
                 </div>
               )}
+              <button
+                onClick={() => setTokenModalOpen(true)}
+                disabled={deployBusy}
+                className="text-[11px] text-slate-500 hover:text-vihat mt-2 underline"
+              >
+                🔄 Cập nhật ZMP Token (nếu deploy báo expired)
+              </button>
             </div>
 
             {autoUrl && (
@@ -367,6 +458,8 @@ export function QrModal({
             </div>
           </div>
         )}
+
+        {tokenModalOpen && <ZmpTokenPanel onClose={() => setTokenModalOpen(false)} />}
 
         <div className="text-[11px] text-slate-400 mt-4 leading-relaxed border-t border-slate-100 pt-3">
           <strong className="text-slate-600">Lưu ý:</strong>

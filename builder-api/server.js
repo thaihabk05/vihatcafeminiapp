@@ -171,6 +171,96 @@ app.get("/api/admin/check", requireAuth, (_req, res) =>
 );
 
 /**
+ * Push a fresh ZMP_TOKEN to GitHub Secrets so the next workflow run picks
+ * it up. `zmp login`-issued tokens expire every 24 hours, so we want this
+ * to be a single click / single command rather than a manual visit to the
+ * repo's Settings → Secrets page.
+ *
+ * Body: { token: string }
+ */
+app.post("/api/admin/zmp-token", requireAuth, async (req, res) => {
+  const GH_TOKEN = process.env.GITHUB_TOKEN;
+  const GH_REPO = process.env.GITHUB_REPO;
+  if (!GH_TOKEN || !GH_REPO) {
+    return res.status(503).json({
+      error:
+        "GitHub integration not configured. Set GITHUB_TOKEN and GITHUB_REPO on the Builder API.",
+    });
+  }
+  const token = (req.body || {}).token;
+  if (typeof token !== "string" || token.length < 50) {
+    return res
+      .status(400)
+      .json({ error: "missing or implausibly-short token in body" });
+  }
+
+  try {
+    const sodium = require("libsodium-wrappers");
+    await sodium.ready;
+
+    // 1) Fetch the repo's public key to encrypt against.
+    const pkRes = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/actions/secrets/public-key`,
+      {
+        headers: {
+          Authorization: `Bearer ${GH_TOKEN}`,
+          Accept: "application/vnd.github+json",
+        },
+      }
+    );
+    if (!pkRes.ok) {
+      const txt = await pkRes.text();
+      throw new Error(
+        `GitHub public-key fetch ${pkRes.status}: ${txt.slice(0, 200)}`
+      );
+    }
+    const { key, key_id } = await pkRes.json();
+
+    // 2) Encrypt with libsodium sealed box.
+    const binkey = sodium.from_base64(key, sodium.base64_variants.ORIGINAL);
+    const binsec = sodium.from_string(token);
+    const encBin = sodium.crypto_box_seal(binsec, binkey);
+    const encrypted_value = sodium.to_base64(
+      encBin,
+      sodium.base64_variants.ORIGINAL
+    );
+
+    // 3) PUT the secret.
+    const setRes = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/actions/secrets/ZMP_TOKEN`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${GH_TOKEN}`,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ encrypted_value, key_id }),
+      }
+    );
+    if (!setRes.ok) {
+      const txt = await setRes.text();
+      throw new Error(
+        `GitHub secret PUT ${setRes.status}: ${txt.slice(0, 200)}`
+      );
+    }
+
+    // 4) Decode JWT payload to surface expiry back to the caller.
+    let exp = null;
+    try {
+      const payload = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64").toString("utf8")
+      );
+      if (payload.exp) exp = payload.exp * 1000;
+    } catch {}
+
+    res.json({ ok: true, expiresAt: exp });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/**
  * Trigger a GitHub Actions deploy via `repository_dispatch`.
  *
  * Requires the following env on the API server:
