@@ -5,6 +5,7 @@ import { CategoriesEditor } from "./editors/CategoriesEditor";
 import { ProductsEditor } from "./editors/ProductsEditor";
 import { BannersEditor } from "./editors/BannersEditor";
 import { Preview } from "./Preview";
+import { QrModal } from "./QrModal";
 
 type Tab = "brand" | "banners" | "categories" | "products";
 
@@ -14,6 +15,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("brand");
   const [previewVer, setPreviewVer] = useState(0);
   const [savedAt, setSavedAt] = useState<string>("");
+  const [qrOpen, setQrOpen] = useState(false);
 
   useEffect(() => {
     api.tenants().then((ts) => {
@@ -60,18 +62,32 @@ export default function App() {
                 {appId ? `${SHELL_BASE}/?appId=${appId}` : "—"}
               </div>
             </div>
-            <button
-              onClick={() => setPreviewVer((v) => v + 1)}
-              className="text-xs px-2 py-1 rounded border border-slate-300 hover:bg-slate-50"
-            >
-              ↻ Reload
-            </button>
+            <div className="flex gap-1.5 flex-none">
+              <button
+                onClick={() => setQrOpen(true)}
+                disabled={!appId}
+                className="text-xs px-2.5 py-1 rounded border border-slate-300 hover:bg-slate-50 disabled:opacity-40"
+                title="Hiện QR test Mini App"
+              >
+                📱 QR
+              </button>
+              <button
+                onClick={() => setPreviewVer((v) => v + 1)}
+                className="text-xs px-2 py-1 rounded border border-slate-300 hover:bg-slate-50"
+              >
+                ↻ Reload
+              </button>
+            </div>
           </div>
           <div className="flex-1 flex items-start justify-center p-4">
             {appId && <Preview appId={appId} version={previewVer} />}
           </div>
         </aside>
       </div>
+
+      {qrOpen && appId && (
+        <QrModal appId={appId} onClose={() => setQrOpen(false)} />
+      )}
     </div>
   );
 }
