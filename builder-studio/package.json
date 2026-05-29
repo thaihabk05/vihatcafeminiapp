@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite --port 5173 --host 127.0.0.1",
     "build": "tsc -p . && vite build",
+    "start": "serve -s dist -l ${PORT:-5173} --no-clipboard",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "serve": "^14.2.4"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
