@@ -36,29 +36,31 @@ export function useVirtualKeyboardVisible() {
 export const useHandlePayment = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    events.on(EventName.OpenApp, (data) => {
-      if (data?.path) {
-        navigate(data?.path, {
-          state: data,
-        });
-      }
-    });
-
-    events.on(EventName.OnDataCallback, (resp) => {
-      const { appTransID, eventType } = resp;
-      if (appTransID || eventType === "PAY_BY_CUSTOM_METHOD") {
-        navigate("/result", {
-          state: resp,
-        });
-      }
-    });
-
-    events.on(EventName.PaymentClose, (data = {}) => {
-      const { zmpOrderId } = data;
-      navigate("/result", {
-        state: { data: { zmpOrderId } },
+    // `events` is only present when running inside Zalo. In a normal browser
+    // (Studio preview iframe, local prod build, healthcheck) the import may
+    // be undefined or throw — guard so render never blanks.
+    if (!events || typeof events.on !== "function") return;
+    try {
+      events.on(EventName.OpenApp, (data) => {
+        if (data?.path) {
+          navigate(data?.path, { state: data });
+        }
       });
-    });
+
+      events.on(EventName.OnDataCallback, (resp) => {
+        const { appTransID, eventType } = resp;
+        if (appTransID || eventType === "PAY_BY_CUSTOM_METHOD") {
+          navigate("/result", { state: resp });
+        }
+      });
+
+      events.on(EventName.PaymentClose, (data = {}) => {
+        const { zmpOrderId } = data;
+        navigate("/result", { state: { data: { zmpOrderId } } });
+      });
+    } catch (e) {
+      console.warn("[shell] payment events skipped:", e);
+    }
   }, []);
 };
 

@@ -13,16 +13,36 @@ import { getSystemInfo } from "zmp-sdk";
 import { ScrollRestoration } from "./scroll-restoration";
 import { useHandlePayment } from "hooks";
 
-if (import.meta.env.DEV) {
+/**
+ * Safe-area handling. `getSystemInfo()` only works inside the real Zalo
+ * runtime — when the Shell is opened in a normal browser (Studio iframe,
+ * local preview, Railway healthcheck) it can throw or return shapes we
+ * don't expect. Wrap so a missing platform never blanks the whole app.
+ */
+try {
+  if (import.meta.env.DEV) {
+    document.body.style.setProperty("--zaui-safe-area-inset-top", "24px");
+  } else {
+    const info: any =
+      typeof getSystemInfo === "function" ? getSystemInfo() : null;
+    if (info?.platform === "android") {
+      const statusBarHeight =
+        window.ZaloJavaScriptInterface?.getStatusBarHeight() ?? 0;
+      const androidSafeTop = Math.round(
+        statusBarHeight / window.devicePixelRatio
+      );
+      document.body.style.setProperty(
+        "--zaui-safe-area-inset-top",
+        `${androidSafeTop}px`
+      );
+    } else {
+      // Browser / iOS — use the same default as DEV so the header lays out.
+      document.body.style.setProperty("--zaui-safe-area-inset-top", "24px");
+    }
+  }
+} catch (e) {
   document.body.style.setProperty("--zaui-safe-area-inset-top", "24px");
-} else if (getSystemInfo().platform === "android") {
-  const statusBarHeight =
-    window.ZaloJavaScriptInterface?.getStatusBarHeight() ?? 0;
-  const androidSafeTop = Math.round(statusBarHeight / window.devicePixelRatio);
-  document.body.style.setProperty(
-    "--zaui-safe-area-inset-top",
-    `${androidSafeTop}px`
-  );
+  console.warn("[shell] safe-area setup skipped:", e);
 }
 
 export const Layout: FC = () => {
