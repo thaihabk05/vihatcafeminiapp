@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "OmiCafé by VIHAT",
+    "title": "ViHAT Cafe",
     "textColor": "black",
     "leftButton": "none",
     "statusBar": "transparent",
@@ -13,7 +13,7 @@
   "listSyncJS": [],
   "listAsyncJS": [],
   "template": {
-    "name": "vihat-coffee",
+    "name": "zaui-coffee",
     "primaryColor": "#E94E1B",
     "prefixCurrencySymbol": false,
     "currencySymbol": "đ",

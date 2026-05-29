@@ -1,12 +1,18 @@
 /**
  * VIHAT MiniApp Builder — Config API
  *
- * Express server backing the multi-tenant Mini App platform.
- * Each tenant is one JSON file under DATA_DIR.
+ * Multi-tenant config store. Each tenant is one JSON file under DATA_DIR.
  *
- * In production (Railway / Render / Fly) attach a persistent volume at
- * DATA_DIR so writes from the Studio survive deploys. On first boot we copy
- * the seed configs from SEED_DIR into DATA_DIR if it's empty.
+ * Auth model
+ * ----------
+ * Reads (GET) are public — the Mini App Shell needs to fetch tenant config
+ * from inside Zalo with no credentials.
+ *
+ * Writes (PUT/DELETE) require `X-Admin-Token` matching the ADMIN_TOKEN env
+ * var. Used by the Builder Studio admin UI.
+ *
+ * If ADMIN_TOKEN is unset (typical for local dev) writes are open. In prod
+ * the Railway env MUST set it.
  */
 const fs = require("fs");
 const path = require("path");
@@ -17,13 +23,34 @@ const PORT = parseInt(process.env.PORT || "4000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const SEED_DIR = path.join(__dirname, "data-seed");
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 
-// In prod, restrict CORS to known origins. ALLOWED_ORIGINS is a comma-separated
-// list, e.g. "https://h5.zdn.vn,https://studio.vihat.vn". Default = open for POC.
+// CORS allowlist. Comma-separated origins. Empty = open (POC only).
+// Pattern support: entries wrapped in /…/ are treated as RegExp source,
+// e.g. "/^https:\\/\\/[a-z0-9-]+\\.vercel\\.app$/" for any Vercel preview.
 const ALLOWED = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+
+const ALLOWED_MATCHERS = ALLOWED.map((s) => {
+  if (s.length > 2 && s.startsWith("/") && s.endsWith("/")) {
+    try {
+      return new RegExp(s.slice(1, -1));
+    } catch {
+      return s;
+    }
+  }
+  return s;
+});
+
+function originAllowed(origin) {
+  if (!origin) return true;
+  return ALLOWED_MATCHERS.some((m) => {
+    if (m instanceof RegExp) return m.test(origin);
+    return m === origin;
+  });
+}
 
 function seedIfEmpty() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -74,8 +101,12 @@ const app = express();
 
 app.use(
   cors({
-    origin: ALLOWED.length === 0 ? true : ALLOWED,
+    origin:
+      ALLOWED.length === 0
+        ? true
+        : (origin, cb) => cb(null, originAllowed(origin)),
     credentials: false,
+    allowedHeaders: ["Content-Type", "X-Admin-Token"],
   })
 );
 app.use(express.json({ limit: "2mb" }));
@@ -88,6 +119,15 @@ app.use(
   })
 );
 
+// Mutation auth. Only enforce if ADMIN_TOKEN is configured.
+function requireAuth(req, res, next) {
+  if (!ADMIN_TOKEN) return next();
+  const provided = req.headers["x-admin-token"];
+  if (provided && provided === ADMIN_TOKEN) return next();
+  return res.status(401).json({ error: "unauthorized" });
+}
+
+// --- Public reads (Mini App Shell + Studio) ---
 app.get("/api/tenants", (_req, res) => res.json(listTenants()));
 
 app.get("/api/apps/:appId/config", (req, res) => {
@@ -104,7 +144,7 @@ for (const section of SECTIONS) {
     res.json(data[section]);
   });
 
-  app.put(`/api/apps/:appId/${section}`, (req, res) => {
+  app.put(`/api/apps/:appId/${section}`, requireAuth, (req, res) => {
     const appId = req.params.appId;
     const data = readTenant(appId);
     if (!data) return res.status(404).json({ error: "tenant not found" });
@@ -115,18 +155,28 @@ for (const section of SECTIONS) {
   });
 }
 
+// --- Studio bootstrap ---
+// Lets the Studio confirm its stored token without making a mutating request.
+app.get("/api/admin/check", requireAuth, (_req, res) =>
+  res.json({ ok: true, authed: true })
+);
+
 app.get("/api/health", (_req, res) =>
   res.json({
     ok: true,
     tenants: listTenants().length,
     dataDir: DATA_DIR,
     env: process.env.NODE_ENV || "development",
+    authEnabled: !!ADMIN_TOKEN,
   })
 );
 
 app.listen(PORT, HOST, () => {
   console.log(`[builder-api] listening on http://${HOST}:${PORT}`);
   console.log(`[builder-api] DATA_DIR=${DATA_DIR}`);
+  console.log(
+    `[builder-api] AUTH=${ADMIN_TOKEN ? "enabled" : "open (set ADMIN_TOKEN)"}`
+  );
   console.log(
     `[builder-api] CORS=${ALLOWED.length ? ALLOWED.join(", ") : "open (*)"}`
   );

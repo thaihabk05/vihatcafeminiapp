@@ -1,35 +1,33 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import ZaloMiniApp from "zmp-vite-plugin";
 import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react";
 
 /**
- * Two-mode config:
+ * Production builds always include `zmp-vite-plugin` so it can emit
+ * `www/app-config.json` (required by `zmp deploy`). Dev builds skip the
+ * plugin so a plain `vite` run stays usable for local browser previews.
  *
- * - `vite` / `vite build`     → preview mode (local), no zmp plugin.
- *   Lets us screenshot in a normal browser without Zalo runtime.
- * - `zmp start` / `zmp deploy` → production mode for Zalo. Sets the
- *   ZMP env flag so the plugin is loaded and the build is packaged
- *   for Zalo Mini App Studio.
- *
- * Set VITE_API_BASE to point at your deployed Builder API.
- * Example: VITE_API_BASE=https://api.vihat-cafe.up.railway.app
+ * Set VITE_API_BASE in `.env.production` to your deployed Builder API.
  */
 export default ({ mode }: { mode: string }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-  const isZmp = !!env.ZMP || !!env.ZMP_DEPLOY;
+  const isProd = mode === "production";
 
   return defineConfig({
-    root: isZmp ? "./src" : ".",
+    root: ".",
     base: "",
     plugins: [
       tsconfigPaths(),
       react(),
-      ...(isZmp ? [ZaloMiniApp()] : []),
+      ...(isProd ? [ZaloMiniApp()] : []),
     ],
     server: {
       port: 3000,
       host: "127.0.0.1",
+    },
+    build: {
+      outDir: "www",
+      emptyOutDir: true,
     },
   });
 };
