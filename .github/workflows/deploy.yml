@@ -39,12 +39,14 @@ jobs:
           cache-dependency-path: vihat-coffee/package-lock.json
 
       - name: Install deps
-        # `npm ci` is too strict — zmp-cli's bundled
-        # react-refresh-webpack-plugin pins type-fest@^0.13.1 but every
-        # other consumer in the tree pulls newer versions, so the lockfile
-        # never satisfies all peer constraints. `npm install` is happy to
-        # resolve those at install time.
-        run: npm install --no-audit --no-fund --no-package-lock
+        run: npm ci --no-audit --no-fund
+
+      - name: Install zmp-cli (CI-only, not in package.json)
+        # zmp-cli has internal peer-dep conflicts (its bundled
+        # react-refresh-webpack-plugin pins type-fest@^0.13.1), so we
+        # install it WITHOUT touching package-lock.json to keep the
+        # Railway Shell build (which also runs `npm ci`) happy.
+        run: npm install --no-save --no-audit --no-fund --legacy-peer-deps zmp-cli@^4.0.3
 
       - name: Configure zmp-cli auth
         run: |
