@@ -78,9 +78,15 @@ proc.on("close", async (code) => {
   }
   const version = parseInt(verMatch[1], 10);
 
-  // Guess environment from prompt outcome. The line is gone by now, so look
-  // for the keyword anywhere in the log.
-  const env = /testing/i.test(stripped) ? "TESTING" : "DEVELOPMENT";
+  // Detect env from CLI flags (reliable) — `-t` / `--testing` means TESTING,
+  // default is DEVELOPMENT. Env var override for callers that wrap us.
+  const argv = process.argv.slice(2);
+  const env =
+    process.env.DEPLOY_ENV === "TESTING" ||
+    argv.includes("-t") ||
+    argv.includes("--testing")
+      ? "TESTING"
+      : "DEVELOPMENT";
 
   // Canonical share URL Zalo uses for unpublished builds.
   const url = `https://zalo.me/s/${ZALO_APP_ID}?env=${env}&v=${version}`;
