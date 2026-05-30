@@ -171,6 +171,39 @@ app.get("/api/admin/check", requireAuth, (_req, res) =>
 );
 
 /**
+ * Debug: tail the failing step's log from a GitHub Actions workflow run.
+ * Uses the same GITHUB_TOKEN env the dispatch endpoint already needs.
+ */
+app.get("/api/admin/gh-log/:runId", requireAuth, async (req, res) => {
+  const GH_TOKEN = process.env.GITHUB_TOKEN;
+  const GH_REPO = process.env.GITHUB_REPO;
+  if (!GH_TOKEN || !GH_REPO) {
+    return res.status(503).json({ error: "github not configured" });
+  }
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/actions/runs/${req.params.runId}/logs`,
+      {
+        headers: {
+          Authorization: `Bearer ${GH_TOKEN}`,
+          Accept: "application/vnd.github+json",
+        },
+        redirect: "follow",
+      }
+    );
+    if (!r.ok) {
+      return res.status(r.status).json({ error: await r.text() });
+    }
+    // The endpoint returns a zip. Send through.
+    res.set("Content-Type", "application/zip");
+    const buf = Buffer.from(await r.arrayBuffer());
+    res.send(buf);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/**
  * Push a fresh ZMP_TOKEN to GitHub Secrets so the next workflow run picks
  * it up. `zmp login`-issued tokens expire every 24 hours, so we want this
  * to be a single click / single command rather than a manual visit to the
