@@ -52,17 +52,33 @@ if (!ADMIN) {
   process.exit(1);
 }
 
-// Optional: decode JWT payload to display expiry locally.
+// Decode JWT payload to check expiry. Refuse to push an already-expired
+// token — that just wastes a GH secret update and the next deploy will
+// fail anyway with "Permission denied. Please login again".
 let expDate = "unknown";
+let expiredHoursAgo = 0;
 try {
   const payload = JSON.parse(
     Buffer.from(ZMP.split(".")[1], "base64").toString("utf8")
   );
-  if (payload.exp) expDate = new Date(payload.exp * 1000).toLocaleString();
+  if (payload.exp) {
+    expDate = new Date(payload.exp * 1000).toLocaleString();
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp < now) {
+      expiredHoursAgo = Math.floor((now - payload.exp) / 3600);
+    }
+  }
 } catch {}
 
 console.log(`[sync-zmp-token] api=${API}`);
 console.log(`[sync-zmp-token] token length=${ZMP.length}, expires=${expDate}`);
+
+if (expiredHoursAgo > 0) {
+  console.error(
+    `✗ Token đã expire ${expiredHoursAgo}h trước. Chạy 'cd vihat-coffee && npx zmp login' trước.`
+  );
+  process.exit(1);
+}
 
 (async () => {
   try {
