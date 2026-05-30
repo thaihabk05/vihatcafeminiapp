@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE, getToken } from "./api";
 
-type Mode = "local" | "test" | "prod";
+type Mode = "dev" | "test" | "prod";
 
 /**
  * QR Modal: 3 modes match the actual Zalo Mini App build pipeline.
@@ -26,7 +26,7 @@ export function QrModal({
 }) {
   const [zaloAppId, setZaloAppId] = useState<string | null>(null);
   const [name, setName] = useState<string>("");
-  const [mode, setMode] = useState<Mode>("test");
+  const [mode, setMode] = useState<Mode>("dev");
   const devUrlKey = `qr-dev-url-${appId}`;
   const [devUrl, setDevUrl] = useState<string>("");
   const [autoUrl, setAutoUrl] = useState<{
@@ -76,7 +76,7 @@ export function QrModal({
   const prodUrl = zaloAppId ? `https://zalo.me/s/${zaloAppId}` : "";
   let url = "";
   if (mode === "prod") url = prodUrl;
-  else if (mode === "test") url = devUrl.trim();
+  else url = devUrl.trim(); // dev or test both use the deploy URL
 
   const qrSrc = url
     ? `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
@@ -99,7 +99,7 @@ export function QrModal({
     localStorage.setItem(devUrlKey, v);
   };
 
-  const triggerDeploy = async () => {
+  const triggerDeploy = async (env: "DEVELOPMENT" | "TESTING") => {
     setErr(null);
     setDeployMsg(null);
     setDeployBusy(true);
@@ -111,8 +111,8 @@ export function QrModal({
           "X-Admin-Token": getToken(),
         },
         body: JSON.stringify({
-          env: "TESTING",
-          description: `Test deploy from Studio`,
+          env,
+          description: `Deploy ${env.toLowerCase()} from Studio`,
         }),
       });
       const data = await r.json();
@@ -162,8 +162,6 @@ export function QrModal({
     }
   };
 
-  const localCmd = "cd vihat-coffee && npx zmp start";
-
   return (
     <div
       onClick={onClose}
@@ -201,11 +199,11 @@ export function QrModal({
 
         {/* Mode tabs */}
         <div className="grid grid-cols-3 mb-4 bg-slate-100 rounded-lg p-1">
-          <ModeTab active={mode === "local"} onClick={() => setMode("local")}>
-            🔧 Local (HMR)
+          <ModeTab active={mode === "dev"} onClick={() => setMode("dev")}>
+            🔧 Development
           </ModeTab>
           <ModeTab active={mode === "test"} onClick={() => setMode("test")}>
-            🧪 Test (share)
+            🧪 Testing
           </ModeTab>
           <ModeTab active={mode === "prod"} onClick={() => setMode("prod")}>
             🚀 Production
@@ -214,18 +212,18 @@ export function QrModal({
 
         {/* Mode descriptions */}
         <div className="text-[11px] text-slate-500 mb-3 leading-relaxed">
-          {mode === "local" && (
+          {mode === "dev" && (
             <>
-              <strong>Dev local HMR</strong>: chạy <code>zmp start</code> trên
-              máy anh. QR trỏ về máy anh qua tunnel của Zalo. Sửa code → reload
-              instant. Không upload lên Zalo, chỉ máy anh test được.
+              <strong>Development tier</strong>: <code>zmp deploy</code> không
+              cờ -t. Bản build upload lên Zalo, chỉ developer (account đã{" "}
+              <code>zmp login</code>) scan được. Dùng cho dev cá nhân iterate.
             </>
           )}
           {mode === "test" && (
             <>
-              <strong>Test upload</strong>: chạy <code>zmp deploy -t</code> qua
-              GitHub Actions. Bản build được lưu trên Zalo, share được cho 100
-              tester đã add ở mini.zalo.me.
+              <strong>Testing tier</strong>: <code>zmp deploy -t</code>. Bản
+              build upload lên Zalo, share được cho 100 tester đã add ở
+              mini.zalo.me. Dùng để demo team / sếp.
             </>
           )}
           {mode === "prod" && (
@@ -237,54 +235,21 @@ export function QrModal({
           )}
         </div>
 
-        {/* LOCAL mode UI */}
-        {mode === "local" && (
-          <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-3">
-            <div className="text-xs font-medium text-blue-900 mb-2">
-              Lệnh chạy trên máy anh
-            </div>
-            <div className="flex gap-2 mb-2">
-              <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1.5 text-xs font-mono break-all">
-                {localCmd}
-              </code>
-              <button
-                onClick={() => copy(localCmd, "cmd")}
-                className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap"
-              >
-                {copied === "cmd" ? "✓ Copied" : "Copy"}
-              </button>
-            </div>
-            <ol className="text-[11px] text-blue-900 leading-relaxed pl-4 list-decimal space-y-1">
-              <li>Mở Terminal trên máy</li>
-              <li>Paste lệnh trên → Enter</li>
-              <li>
-                Đợi <code>Vite</code> build + <code>zmp</code> in QR ASCII
-              </li>
-              <li>
-                Mở Zalo → góc trên phải → <strong>Quét QR</strong> trong
-                terminal
-              </li>
-              <li>
-                Sửa code → mini app trong Zalo tự reload (
-                <strong>HMR</strong>)
-              </li>
-            </ol>
-          </div>
-        )}
-
-        {/* TEST mode UI */}
-        {mode === "test" && (
+        {/* DEV / TEST mode UI — both deploy via zmp deploy */}
+        {(mode === "dev" || mode === "test") && (
           <div className="mb-3">
             <div className="border border-slate-200 rounded-lg p-3 mb-3 bg-slate-50">
               <div className="text-xs font-medium text-slate-700 mb-2">
                 🚀 Deploy thẳng từ Studio
               </div>
               <button
-                onClick={triggerDeploy}
+                onClick={() => triggerDeploy(mode === "test" ? "TESTING" : "DEVELOPMENT")}
                 disabled={deployBusy}
                 className="w-full bg-vihat text-white text-sm font-medium rounded px-3 py-2 disabled:opacity-50"
               >
-                {deployBusy ? "Đang deploy…" : "Deploy lên Test tier"}
+                {deployBusy
+                  ? "Đang deploy…"
+                  : `Deploy lên ${mode === "test" ? "Testing" : "Development"} tier`}
               </button>
               {deployMsg && (
                 <div className="text-[11px] text-slate-600 mt-2 leading-relaxed">
@@ -349,30 +314,29 @@ export function QrModal({
           </div>
         )}
 
-        {/* QR display (test + prod) */}
-        {mode !== "local" &&
-          (qrSrc ? (
-            <div className="flex flex-col items-center">
-              <img
-                src={qrSrc}
-                alt="Zalo Mini App QR"
-                className="w-72 h-72 rounded-xl border border-slate-200"
-              />
-              <div className="text-xs text-slate-500 mt-3 text-center">
-                Mở app <strong>Zalo</strong> → góc trên phải →{" "}
-                <strong>Quét QR</strong>
-              </div>
+        {/* QR display */}
+        {qrSrc ? (
+          <div className="flex flex-col items-center">
+            <img
+              src={qrSrc}
+              alt="Zalo Mini App QR"
+              className="w-72 h-72 rounded-xl border border-slate-200"
+            />
+            <div className="text-xs text-slate-500 mt-3 text-center">
+              Mở app <strong>Zalo</strong> → góc trên phải →{" "}
+              <strong>Quét QR</strong>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-72 text-slate-400 text-sm border border-dashed border-slate-300 rounded-xl">
-              {mode === "test"
-                ? "Bấm 'Deploy lên Test tier' để có QR"
-                : "Cần zaloAppId để render QR Production"}
-            </div>
-          ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-72 text-slate-400 text-sm border border-dashed border-slate-300 rounded-xl">
+            {mode === "prod"
+              ? "Cần zaloAppId để render QR Production"
+              : `Bấm 'Deploy lên ${mode === "test" ? "Testing" : "Development"} tier' để có QR`}
+          </div>
+        )}
 
         {/* URL copy bar */}
-        {mode !== "local" && url && (
+        {url && (
           <div className="mt-4">
             <div className="text-xs font-medium text-slate-600 mb-1">URL</div>
             <div className="flex gap-2">
