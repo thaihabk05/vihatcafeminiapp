@@ -74,7 +74,13 @@ jobs:
           DEPLOY_ENV: ${{ github.event.client_payload.env || inputs.env }}
           DEPLOY_DESC: ${{ github.event.client_payload.description || inputs.description }}
         run: |
-          FLAGS="-e -p"
+          # `-p` (passive, non-interactive) without `-e`:
+          # zmp-cli runs its own vite build, populates www/app-config.json
+          # with the real assets, then uploads. With `-e` it would skip the
+          # rebuild and use our pre-built www/, but then it also tries to
+          # validate listSyncJS/listAsyncJS from the SOURCE app-config.json
+          # (which is intentionally empty in our template) → fails.
+          FLAGS="-p"
           if [ "$DEPLOY_ENV" = "TESTING" ]; then FLAGS="$FLAGS -t"; fi
           node scripts/zmp-deploy.js $FLAGS -m "$DEPLOY_DESC"
 
